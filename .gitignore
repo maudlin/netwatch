@@ -1,0 +1,53 @@
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[bB]uild/
+bin/
+obj/
+
+# Visual Studio Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+.nuget/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# Other
+_ReSharper*/
+*.[Rr]e[Ss]harper
+[Tt]est[Rr]esult*/
+[Tt]est[Rr]esults*/
+*.cache
+*.tmp
+*.temp
+*.swp
+*.DS_Store
+Thumbs.db
+
+# OneDrive temp files
+~$*
+

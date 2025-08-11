@@ -1,0 +1,259 @@
+<Window x:Class="Netwatch.ExpandedWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:local="clr-namespace:Netwatch.Controls"
+        Title="Netwatch" Width="480" Background="Transparent" AllowsTransparency="True" WindowStyle="None" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        KeyDown="OnKeyDown">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <Border Style="{StaticResource Card}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+            <StackPanel Margin="14">
+                <!-- Header bar with window controls -->
+            <DockPanel MouseLeftButtonDown="OnHeaderDrag">
+<TextBlock Text="Netwatch" Foreground="{StaticResource TextMuted}" FontSize="14" FontWeight="SemiBold"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="✕" Padding="0" Margin="0,-6,-6,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="CloseExpanded"/>
+            </DockPanel>
+                <!-- Connection summary -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Connection" Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding LinkBadge}" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Copy snapshot" Margin="10,0,0,0" Padding="10,4" Click="CopySnapshot"/>
+                    </Grid>
+                </Border>
+
+                <!-- Readiness strip -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <UniformGrid Columns="4" HorizontalAlignment="Stretch">
+                        <!-- Tile 1: Latency -->
+                        <Grid Margin="6,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{Binding StatusBrush}" CornerRadius="2"/>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Style="{StaticResource MutedLabel}" Text="Latency"/>
+                                <TextBlock Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold" Text="{Binding LatencyP50}"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Text="{Binding LatencyP95Text}"/>
+                            </StackPanel>
+                        </Grid>
+                        <!-- Tile 2: Jitter -->
+                        <Grid Margin="6,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{Binding StatusBrush}" CornerRadius="2"/>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Style="{StaticResource MutedLabel}" Text="Jitter"/>
+                                <TextBlock Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold" Text="{Binding JitterMs}"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Text="{Binding LossText}"/>
+                            </StackPanel>
+                        </Grid>
+                        <!-- Tile 3: Loss -->
+                        <Grid Margin="6,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{Binding StatusBrush}" CornerRadius="2"/>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Style="{StaticResource MutedLabel}" Text="Loss"/>
+                                <TextBlock Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold" Text="{Binding LossPctOnly}"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Text=""/>
+                            </StackPanel>
+                        </Grid>
+                        <!-- Tile 4: DNS -->
+                        <Grid Margin="6,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{Binding StatusBrush}" CornerRadius="2"/>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Style="{StaticResource MutedLabel}" Text="DNS"/>
+                                <TextBlock Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold" Text="{Binding DnsMedian}"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Text="{Binding DnsDetail}"/>
+                            </StackPanel>
+                        </Grid>
+                    </UniformGrid>
+                </Border>
+
+                <!-- Trends: sparklines -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Latency &amp; Jitter" Foreground="{StaticResource TextMuted}"/>
+                        <Grid Height="130" ClipToBounds="True">
+                            <!-- Gridlines -->
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
+                                <Rectangle Grid.Row="3" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
+                            </Grid>
+                            <!-- Series -->
+                        <local:SparklineControl Values="{Binding LatencySeries}"
+                                                Timestamps="{Binding LatencyTimestamps}"
+                                                WindowSeconds="60"
+                                                Stroke="{StaticResource TextPrimary}"
+                                                Thickness="1.2"
+                                                FadeEnabled="True"
+                                                PlotTopPadding="14"
+                                                PlotBottomPadding="12"
+                                                ShowYAxis="True"
+                                                ShowGridlines="True"
+                                                YAxisWidth="36"
+                                                ForceZeroBaseline="True" />
+                        <local:SparklineControl Values="{Binding JitterSeries}"
+                                                Timestamps="{Binding JitterTimestamps}"
+                                                WindowSeconds="60"
+                                                Stroke="{StaticResource AmberBrush}"
+                                                Thickness="1"
+                                                FadeEnabled="True"
+                                                PlotTopPadding="14"
+                                                PlotBottomPadding="12"
+                                                ShowYAxis="True"
+                                                ShowGridlines="True"
+                                                YAxisWidth="36"
+                                                ForceZeroBaseline="True" />
+                            <!-- Legend & axis -->
+                            <DockPanel VerticalAlignment="Top" LastChildFill="False" Margin="0,0,0,0">
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Rectangle Width="14" Height="2" Fill="{StaticResource TextPrimary}" RadiusX="1" RadiusY="1"/>
+                                        <TextBlock Text=" Latency" Foreground="{StaticResource TextSubtle}" FontSize="11"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <Rectangle Width="14" Height="2" Fill="{StaticResource AmberBrush}" RadiusX="1" RadiusY="1"/>
+                                        <TextBlock Text=" Jitter" Foreground="{StaticResource TextSubtle}" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="ms" Foreground="{StaticResource TextSubtle}" FontSize="10"/>
+                            </DockPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="Packet loss" Foreground="{StaticResource TextMuted}"/>
+<Border DockPanel.Dock="Right" Style="{StaticResource StatusPill}" Background="{StaticResource RedBrush}" Visibility="{Binding HasRecentLoss, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="LOSS" Foreground="White" FontSize="10"/>
+                            </Border>
+                        </DockPanel>
+                        <Grid Height="110" ClipToBounds="True">
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
+                                <Rectangle Grid.Row="3" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
+                            </Grid>
+                        <local:SparklineControl Values="{Binding LossSeries}"
+                                                Timestamps="{Binding LossTimestamps}"
+                                                WindowSeconds="60"
+                                                Stroke="{StaticResource RedBrush}"
+                                                Thickness="1.2"
+                                                FadeEnabled="True"
+                                                YUnit="%"
+                                                PlotBottomPadding="12"
+                                                ShowYAxis="True"
+                                                ShowGridlines="True"
+                                                YAxisWidth="36"
+                                                ForceZeroBaseline="True" />
+                            <TextBlock Text="%" Foreground="{StaticResource TextSubtle}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bufferbloat card -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel>
+                                <TextBlock Text="Idle vs Load" Foreground="{StaticResource TextMuted}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center">
+                                    <Rectangle Width="40" Height="40" Fill="#222" RadiusX="6" RadiusY="6"/>
+                                    <Rectangle Width="40" Height="40" Fill="#333" RadiusX="6" RadiusY="6" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding BloatDelta}" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold" Margin="16,0,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding BloatDelta}" Value="—">
+                                            <Setter Property="FontSize" Value="12"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextSubtle}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding BloatDelta}" Value="Not tested">
+                                            <Setter Property="FontSize" Value="12"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextSubtle}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Run 10s upload test" Margin="12,0,0,0" Padding="10,4" VerticalAlignment="Center" Click="RunUploadTest"/>
+                    </Grid>
+                </Border>
+
+                <!-- DNS & Targets card -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="DNS &amp; Path" Foreground="{StaticResource TextMuted}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,6">
+                            <TextBlock Text="{Binding DnsMedian}" Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold"/>
+                            <TextBlock Text="  (" Foreground="{StaticResource TextSubtle}"/>
+                            <TextBlock Text="{Binding DnsDetail}" Foreground="{StaticResource TextSubtle}"/>
+                            <TextBlock Text=")" Foreground="{StaticResource TextSubtle}"/>
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding TargetSummaries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Foreground="{StaticResource TextPrimary}" Text="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Footer -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource StatusPill}" Background="{Binding StatusBrush}" Margin="0,0,8,0">
+                            <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="12"/>
+                        </Border>
+                        <TextBlock Text="{Binding StatusReason}" Foreground="{StaticResource TextMuted}"/>
+                    </StackPanel>
+                    <CheckBox Grid.Column="1" Content="Call Guard" Foreground="{StaticResource TextMuted}"/>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</Window>

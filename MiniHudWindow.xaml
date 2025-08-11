@@ -1,0 +1,88 @@
+<Window x:Class="Netwatch.MiniHudWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:local="clr-namespace:Netwatch.Controls"
+        Title="Network Health" Width="280" Height="220" ResizeMode="NoResize" WindowStyle="None" Topmost="True" Background="Transparent" AllowsTransparency="True">
+    <Border Style="{StaticResource Card}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <DockPanel Grid.Row="0" MouseLeftButtonDown="OnHeaderDrag">
+                <TextBlock Text="Network Health" Foreground="{StaticResource TextMuted}" FontSize="14" FontWeight="SemiBold" />
+                <!-- Status pill moved into Status tile to avoid duplication -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource IconButton}" Content="—" Padding="0" Margin="0,0,6,0" Click="CloseWindow"/>
+                    <Button Style="{StaticResource IconButton}" Content="✕" Padding="0" Click="ExitApp"/>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Tiles -->
+            <UniformGrid Grid.Row="1" Columns="2" Margin="0,8,0,4">
+                <Border Style="{StaticResource Tile}">
+                    <Grid ClipToBounds="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="28"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource MutedLabel}" Text="Latency (p50)"/>
+                            <TextBlock Style="{StaticResource BigNumberTextMini}" Text="{Binding LatencyP50}" Margin="0,1,0,0"/>
+                            <TextBlock Style="{StaticResource SubtleText}" Text="{Binding LatencyP95Text}" Margin="0,1,0,0"/>
+                        </StackPanel>
+                        <local:SparklineControl Grid.Row="1" Values="{Binding LatencySeries}" Timestamps="{Binding LatencyTimestamps}" WindowSeconds="60" Stroke="{StaticResource TextSubtle}" Thickness="1" Height="28" Margin="0,2,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top" ClipToBounds="True" />
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <Grid ClipToBounds="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="28"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource MutedLabel}" Text="Jitter"/>
+                            <TextBlock Style="{StaticResource BigNumberTextMini}" Text="{Binding JitterMs}" Margin="0,1,0,0"/>
+                            <TextBlock Style="{StaticResource SubtleText}" Text="{Binding LossText}" Margin="0,1,0,0"/>
+                        </StackPanel>
+                        <local:SparklineControl Grid.Row="1" Values="{Binding JitterSeries}" Timestamps="{Binding JitterTimestamps}" WindowSeconds="60" Stroke="{StaticResource AmberBrush}" Thickness="1" Height="28" Margin="0,2,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top" ClipToBounds="True" />
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <Grid ClipToBounds="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="28"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource MutedLabel}" Text="DNS"/>
+                            <TextBlock Style="{StaticResource BigNumberTextMini}" Text="{Binding DnsMedian}" Margin="0,1,0,0"/>
+                            <TextBlock Style="{StaticResource SubtleText}" Text="{Binding DnsDetail}" Margin="0,1,0,0"/>
+                        </StackPanel>
+                        <local:SparklineControl Grid.Row="1" Values="{Binding DnsSeries}" Timestamps="{Binding DnsTimestamps}" WindowSeconds="60" Stroke="{StaticResource TextSubtle}" Thickness="1" Height="28" Margin="0,2,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top" ClipToBounds="True" />
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Tile}" MinHeight="72">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource MutedLabel}" Text="Status"/>
+                        <Border Background="{Binding StatusBrush}" CornerRadius="10" Padding="8,1" Margin="0,2,0,0" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource SubtleText}" Text="{Binding StatusReason}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Style="{StaticResource SubtleText}" Text="{Binding LastUpdatedText}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Footer -->
+            <DockPanel Grid.Row="2">
+                <TextBlock Text="{Binding LinkBadge}" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                <Button Style="{StaticResource PrimaryButton}" Content="Details" DockPanel.Dock="Right" Padding="10,4" Margin="8,0,0,0" Click="OpenExpanded"/>
+            </DockPanel>
+        </Grid>
+    </Border>
+</Window>

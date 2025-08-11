@@ -1,0 +1,207 @@
+Here’s a precise implementation guide a .NET engineer can follow to build the **NetworkHUD** UI exactly like the mockup—no code here, just structure, components, and behaviors.
+
+# 1) Project + architectural decisions
+
+* Framework: **WPF (.NET 8)** with MVVM-lite (simple `INotifyPropertyChanged` viewmodels; no heavy framework needed).
+* Windows: **MiniHudWindow** (frameless, always-on-top, \~280×180) and **ExpandedWindow** (\~420×560, scrollable).
+* Data source: one **ProbeViewModel** that exposes the already-available metrics (latency p50/p95, jitter, loss, DNS median/p90, bloat delta, link badge, status state + reason). Mini and Expanded bind to the same instance.
+* Resource strategy: **Theme ResourceDictionary** for colors, spacing, typography, and common styles (cards, tiles, pills, buttons, chips). All colors & radii come from resources so theming is trivial later.
+
+# 2) Visual language & tokens
+
+Define these as app-level resources:
+
+* Colors
+
+  * BackgroundDark: `#0B0B0C`
+  * CardDark: `#1E1E1F` (slightly lighter)
+  * TextPrimary: `#F7F7F8`
+  * TextMuted: `#AAAAAA`
+  * TextSubtle: `#888888`
+  * Green: `#2BB673`, Amber: `#FFB020`, Red: `#E5484D`
+  * Divider: `#22000000` (low-opacity black)
+* Elevation
+
+  * CardShadow: soft shadow; radius ≈ 24, offset Y ≈ 8, 8–10% opacity
+* Shape
+
+  * CardRadius: 12–14 px
+  * PillRadius: 10 px
+* Spacing scale (px): 4, 8, 12, 16
+* Typography
+
+  * Family: Segoe UI Variable
+  * Sizes: Title 16, Number 28–36, Label 12–14, Subtext 11–12
+* States
+
+  * StatusBrush by enum (Green/Amber/Red). Expose as three brushes and a converter or style trigger.
+
+# 3) Reusable primitives (Styles/Templates)
+
+Create these styles (setters only; no code-behind):
+
+* **Card**: rounded border, `CardDark` background, 1px `Divider` border, padding 8–12, drop shadow.
+* **Tile** (used in Mini HUD): based on Card, tighter padding, vertical layout: Label → BigNumber → Subtext.
+* **StatusPill**: rounded rectangle, white text, background bound to StatusBrush.
+* **MutedLabel**: small label, `TextMuted`, uppercase disabled (we’re not using all-caps).
+* **BigNumberText**: large numeric, bold, `TextPrimary`.
+* **SubtleText**: small, `TextSubtle`.
+* **PrimaryButton**: neutral button with subtle hover; use system accent only for focus ring.
+* **IconButton**: square, minimal chrome, for “✕” and small actions.
+
+# 4) Mini HUD layout (280×180, frameless)
+
+Window properties:
+
+* No system chrome; background is transparent; root container uses a rounded **Card** as the only visible frame.
+* Always-on-top; position: bottom-right of work area with 16 px margins.
+
+Layout (Grid with three rows):
+
+1. **Header row (Auto)**
+
+   * Left: “Network Health”
+   * Next: **StatusPill** bound to `StatusText` and `StatusBrush`
+   * Right: last-updated text `↻ HH:mm:ss`
+2. **Tiles row (\*)**
+
+   * 2×2 **Tile** grid (UniformGrid with 2 columns):
+
+     * Tile 1: “Latency (p50)” + big number bound to `LatencyP50` + subtext “p95 xx ms”
+     * Tile 2: “Jitter” + big number bound to `JitterMs` + subtext “loss x.x%”
+     * Tile 3: “DNS” + big number bound to `DnsMedian` + subtext “p90 xx ms”
+     * Tile 4: “Bufferbloat” + big number bound to `BloatDelta` + small **Run test** button (align left)
+3. **Footer row (Auto)**
+
+   * Left: **Link badge** text (e.g., `Wi-Fi · -52 dBm · 5 GHz` or `Ethernet · 1 Gbps`)
+   * Right: \[Details] button → opens Expanded, and a compact \[✕] to hide.
+
+Behavior:
+
+* Left-click tray icon toggles this window.
+* `Run test` button triggers the short upload test (already planned on the VM).
+* No animations needed beyond a quick opacity crossfade when Status changes (150 ms).
+
+# 5) Expanded Panel layout (420×560, scrollable)
+
+Root: ScrollViewer → StackPanel with 14 px outer margin.
+
+Sections (separate **Card**s where appropriate):
+
+1. **Connection summary (Header text + subtext line)**
+
+   * Title: “Connection”
+   * Subtext: Link badge; line below with ISP + external IP (bound)
+   * Right-aligned **“Copy snapshot”** button (small)
+2. **Readiness strip (one Card)**
+
+   * Four horizontal chips/mini-tiles in a wrap panel:
+
+     * Latency p50 with p95 subtext
+     * Jitter with loss subtext
+     * Loss %
+     * DNS median with p90 subtext
+   * Each chip shows a **thin edge accent** color from status (not full-tile color fill)
+3. **Trends (two Cards)**
+
+   * Card A: “Latency & Jitter” — a single compact sparkline area (last 10 min); two series (p50 line, jitter line). Use a custom drawing control (see §6).
+   * Card B: “Packet loss” — lollipop markers per 10s bucket (0–100% scale on Y)
+4. **Bufferbloat card**
+
+   * Left: small idle vs under-load bars; Right: big delta “+34 ms”
+   * **Run 10s upload test** button
+5. **DNS & Path card**
+
+   * DNS median/p90 again with a tiny distribution strip (min–max overlay)
+   * List of targets with current RTT and loss: Public (1.1.1.1), Gateway, DNS resolver
+6. **Footer bar**
+
+   * Status text (GREEN/AMBER/RED) and **StatusReason**
+   * Toggle (checkbox) for **Call Guard** feature placeholder
+
+Behavior:
+
+* ESC closes; window remembers size/position.
+* Charts update on a timer (bound VM event). Keep animations subtle: line translate instead of full redraw if desired.
+
+# 6) Sparklines & charts (lightweight approach)
+
+Goal: retain a tiny footprint; avoid big chart libs.
+
+* Implement a **SparklineControl** that takes a fixed-size array of doubles (e.g., 60 or 120 points) and renders:
+
+  * a single 1px polyline,
+  * optional threshold dash (e.g., target latency guideline),
+  * optional dots for p95/p50.
+* For **Packet loss lollipops**: draw sticks using rectangles/lines; each bucket is a column with a circle at the top when loss > 0.
+* Performance rules:
+
+  * Freeze brushes/pens.
+  * Avoid layout changes; redraw only on new data.
+  * Cap FPS to probe cadence (e.g., 1–2 Hz).
+
+# 7) Data binding & state mapping
+
+* The ViewModel exposes **string properties** for all textual numerics (with units baked in), and **numeric arrays** for sparkline inputs.
+* **Status mapping**:
+
+  * Enum or string: “GREEN”, “AMBER”, “RED”
+  * Converter (or DataTrigger) maps to **StatusBrush** (Green/Amber/Red).
+  * The pill’s text is the status string; the window title and tray tooltip can reuse it.
+* **Targets list**: simple `IEnumerable<string>`; ItemsControl in the Expanded Panel.
+
+# 8) Interactions & tray integration
+
+* Tray menu: Show/Hide Mini HUD, Show Expanded, Run Test, Copy Snapshot, Exit.
+* Mini HUD buttons:
+
+  * “Run test” calls the VM’s async command (bind via ICommand if desired).
+  * “Details” opens Expanded (pass the same VM instance).
+* Middle-click tray icon: optional direct “Run 10s upload test” (nice productivity touch).
+
+# 9) Accessibility & responsiveness
+
+* Contrast: check 4.5:1 for all text/background pairs.
+* Focus visuals: ensure a visible focus rectangle on all buttons/links.
+* Keyboard:
+
+  * Mini HUD: Tab order left-to-right, then down.
+  * Expanded: ESC closes, PgUp/PgDn scrolls.
+* DPI: test at 100%, 125%, 150%. Use layout units (not absolute pixels) for widths where possible; keep the Mini HUD near 280×180 at 100% DPI.
+
+# 10) Telemetry & UX polish (non-functional now, but plan for it)
+
+* Avoid any background uploads by default; only run the bloat test on explicit user action.
+* Provide a **Copy snapshot** action in both windows.
+* Notifications: toast a warning when bufferbloat or loss breaches thresholds during a test.
+
+# 11) Acceptance criteria (visual + behavioral)
+
+**Mini HUD**
+
+* Dimensions ≈ 280×180 at 100% DPI; frameless with 14 px corner radius.
+* Four tiles show: Latency p50 (with p95), Jitter (with loss), DNS median (with p90), Bufferbloat delta (+ms).
+* Status pill reflects VM status; last-updated clock ticks on probe cadence.
+* Link badge reflects Wi-Fi/Ethernet; Details & Close present and functional.
+
+**Expanded Panel**
+
+* Single-column stack of Cards; no horizontal scroll.
+* Readiness chips + two trend charts + bufferbloat card + DNS/Targets card.
+* Footer shows status + reason and a Call Guard toggle.
+* Scroll behavior smooth; Copy Snapshot copies a plain-text health summary.
+
+**General**
+
+* No flashing; status color transitions are smooth.
+* No layout jitter as numbers update.
+* All text uses consistent units and labels.
+
+# 12) Handoff checklist for the engineer
+
+* Create the ResourceDictionary with color/spacing/typography tokens and the styles listed above.
+* Build MiniHudWindow using the described grid and `Tile` style.
+* Build ExpandedWindow sections as described; stub the sparkline control with static data first.
+* Bind to the existing viewmodel properties (names as in the brief: `LatencyP50`, `LatencyP95Text`, `JitterMs`, `LossText`, `DnsMedian`, `DnsDetail`, `BloatDelta`, `LinkBadge`, `StatusText`, `StatusReason`, `TargetSummaries`).
+* Add the tray icon behavior and wire the window show/hide logic.
+* Replace the bufferbloat placeholder once the engineer implementing probes finishes the real on-demand test.
