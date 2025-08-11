@@ -1,0 +1,1 @@
+Manual or Call Guard in future. During a 5–10 s test, keep pings at 2 Hz and run 2–4 parallel HTTP uploads to a discard endpoint. Compute delta vs baseline median RTT: +≤40 ms GREEN, 40–120 ms AMBER, >120 ms RED. Stop immediately on cancel/close.

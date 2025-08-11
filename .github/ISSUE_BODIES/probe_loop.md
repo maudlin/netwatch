@@ -1,0 +1,1 @@
+Single-process WPF app with one background probe loop ticked by PeriodicTimer (1 s). Stagger sub-ops each tick: T=0 ms gateway ping, T=333 ms resolver ping, T=666 ms public ping. Use async/await, below-normal priority. Coalesce UI updates to 1–2 Hz.
