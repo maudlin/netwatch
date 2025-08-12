@@ -68,8 +68,8 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                 <Border Style="{StaticResource Tile}" MinHeight="72">
                     <StackPanel>
                         <TextBlock Style="{StaticResource MutedLabel}" Text="Status"/>
-                        <Border Background="{Binding StatusBrush}" CornerRadius="10" Padding="8,1" Margin="0,2,0,0" HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                        <Border Style="{StaticResource StatusPill}" Background="{Binding StatusBrush}" Margin="0,2,0,0" HorizontalAlignment="Left">
+                            <TextBlock Style="{StaticResource PillText}" Text="{Binding StatusText}"/>
                         </Border>
 
                         <TextBlock Style="{StaticResource SubtleText}" Text="{Binding StatusReason}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
