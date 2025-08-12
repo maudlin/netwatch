@@ -45,7 +45,7 @@ namespace Netwatch
             menu.Renderer = new ToolStripProfessionalRenderer(new Services.DarkColorTable());
             menu.ShowImageMargin = false;
             // Font to match app typography
-            try { menu.Font = new Font("Segoe UI Variable", 9.0f, FontStyle.Regular, GraphicsUnit.Point); } catch { /* fallback to default */ }
+            try { menu.Font = new System.Drawing.Font("Segoe UI Variable", 9.0f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point); } catch { /* fallback to default */ }
             menu.ForeColor = System.Drawing.ColorTranslator.FromHtml("#F7F7F8");
             menu.BackColor = System.Drawing.ColorTranslator.FromHtml("#1E1E1F");
 
