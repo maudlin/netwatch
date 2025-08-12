@@ -115,8 +115,8 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                                 FadeEnabled="True"
                                                 PlotTopPadding="14"
                                                 PlotBottomPadding="12"
-                                                ShowYAxis="True"
-                                                ShowGridlines="True"
+                                                ShowYAxis="False"
+                                                ShowGridlines="False"
                                                 YAxisWidth="36"
                                                 ForceZeroBaseline="True" />
                             <!-- Legend & axis -->
