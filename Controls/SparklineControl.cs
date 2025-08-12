@@ -368,11 +368,12 @@ namespace Netwatch.Controls
                 DrawGridlines(dc, plotRect);
             }
 
-            // Map points to screen Y once
+            // Map points to screen Y once and clamp X inside plotRect
             var mappedPts = new List<System.Windows.Point>(pts.Count);
             for (int i = 0; i < pts.Count; i++)
             {
-                mappedPts.Add(new System.Windows.Point(pts[i].X, YToScreen(pts[i].Y)));
+                double x = Math.Max(plotRect.Left, Math.Min(plotRect.Right, pts[i].X));
+                mappedPts.Add(new System.Windows.Point(x, YToScreen(pts[i].Y)));
             }
 
             // Determine baseline (0 axis) in screen coords. If 0 not within range, use min edge.
@@ -388,7 +389,10 @@ namespace Netwatch.Controls
             // Build line pen (solid)
             var linePen = CreateLinePen();
 
-            // Build geometry for the line on top
+            // Build geometry for the line on top, clipped to plotRect to avoid overshoot
+            var clip = new RectangleGeometry(plotRect);
+            dc.PushClip(clip);
+
             if (mappedPts.Count == 1)
             {
                 var p = mappedPts[0];
@@ -400,6 +404,7 @@ namespace Netwatch.Controls
                 }
                 geo.Freeze();
                 dc.DrawGeometry(null, linePen, geo);
+                dc.Pop();
                 return;
             }
 
@@ -422,6 +427,8 @@ namespace Netwatch.Controls
                 geo.Freeze();
                 dc.DrawGeometry(null, linePen, geo);
             }
+
+            dc.Pop();
         }
 
         private System.Windows.Media.Pen CreateLinePen()
@@ -604,6 +611,10 @@ namespace Netwatch.Controls
             }
             area.Freeze();
 
+            // Clip the fill to plotRect as well
+            var clip = new RectangleGeometry(plotRect);
+            dc.PushClip(clip);
+
             // Create a vertical gradient that is 50% at line (top of area) and 0% at baseline
             System.Windows.Media.Color baseColor;
             if (LineBrush is System.Windows.Media.SolidColorBrush scb)
@@ -628,6 +639,7 @@ namespace Netwatch.Controls
             try { fill.Freeze(); } catch { }
 
             dc.DrawGeometry(fill, null, area);
+            dc.Pop();
         }
     }
 }
