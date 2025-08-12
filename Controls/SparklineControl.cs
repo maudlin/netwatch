@@ -304,10 +304,19 @@ namespace Netwatch.Controls
 
             if (Math.Abs(maxY - minY) < 1e-9)
             {
-                // Expand a degenerate range slightly to avoid division by zero
-                double mid = minY;
-                minY = mid - 0.5;
-                maxY = mid + 0.5;
+                // Avoid negative baselines for positive-only data (e.g., % loss)
+                if (ForceZeroBaseline && minY >= 0)
+                {
+                    minY = 0;
+                    maxY = 1; // 0..1 default span
+                }
+                else
+                {
+                    // Expand symmetrically around the value to avoid division by zero
+                    double mid = minY;
+                    minY = mid - 0.5;
+                    maxY = mid + 0.5;
+                }
             }
 
             // Map Y from value space into plotRect (invert Y axis)
@@ -403,8 +412,8 @@ namespace Netwatch.Controls
             double axisX = Math.Round(plotRect.Left) + 0.5; // crisp 1px line
             dc.DrawLine(axisPen, new System.Windows.Point(axisX, plotRect.Top), new System.Windows.Point(axisX, plotRect.Bottom));
 
-            // Choose 3 ticks (min/mid/max) for readability
-            int tickCount = 3;
+            // Choose 5 ticks (0/25/50/75/100%) for consistency across charts
+            int tickCount = 5;
             var typeface = new Typeface("Segoe UI");
             for (int i = 0; i < tickCount; i++)
             {
@@ -443,15 +452,22 @@ namespace Netwatch.Controls
 
         private void DrawGridlines(DrawingContext dc, Rect plotRect)
         {
-            int tickCount = 3;
+            // 5 gridlines at 0/25/50/75/100%
+            int tickCount = 5;
             var pen = new System.Windows.Media.Pen(GridlineBrush, 0.5);
+            try { pen.Freeze(); } catch { }
+
+            // Align gridline start to the same axisX as DrawYAxis to avoid protruding left of the axis
+            double axisX = Math.Round(plotRect.Left) + 0.5; // vertical axis line position
+
             for (int i = 0; i < tickCount; i++)
             {
                 double t = (double)i / (tickCount - 1);
                 double y = plotRect.Bottom - t * plotRect.Height;
                 double ySnap = Math.Round(y) + 0.5; // crisp 1px
-                double xL = Math.Round(plotRect.Left) + 0.5;
+                double xL = axisX; // start exactly at axis
                 double xR = Math.Round(plotRect.Right) + 0.5;
+                // Clip visually within plot rect by staying between [axisX, right]
                 dc.DrawLine(pen, new System.Windows.Point(xL, ySnap), new System.Windows.Point(xR, ySnap));
             }
         }
