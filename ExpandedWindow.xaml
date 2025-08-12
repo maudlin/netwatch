@@ -27,7 +27,12 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                             <TextBlock Text="Connection" Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding LinkBadge}" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Copy snapshot" Margin="10,0,0,0" Padding="10,4" Click="CopySnapshot"/>
+                        <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <Border Style="{StaticResource StatusPill}" Background="{Binding StatusBrush}" Margin="0,0,0,6">
+                                <TextBlock Style="{StaticResource PillText}" Text="{Binding StatusText}"/>
+                            </Border>
+                            <Button Style="{StaticResource PrimaryButton}" Content="Copy snapshot" Padding="10,4" Click="CopySnapshot"/>
+                        </StackPanel>
                     </Grid>
                 </Border>
 
@@ -93,7 +98,7 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                 <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                     <StackPanel>
                         <TextBlock Text="Latency &amp; Jitter" Foreground="{StaticResource TextMuted}"/>
-                            <Grid Height="130" ClipToBounds="True">
+                            <Grid Height="120" ClipToBounds="True">
                             <!-- Series (SparklineControl renders its own gridlines and axis) -->
                         <local:SparklineControl Values="{Binding LatencySeries}"
                                                 Timestamps="{Binding LatencyTimestamps}"
@@ -149,7 +154,7 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                 <TextBlock Style="{StaticResource PillText}" Text="LOSS"/>
                             </Border>
                         </DockPanel>
-                        <Grid Height="110" ClipToBounds="True">
+                        <Grid Height="100" ClipToBounds="True">
                         <!-- Series (SparklineControl renders its own gridlines and axis) -->
                         <local:SparklineControl Values="{Binding LossSeries}"
                                                 Timestamps="{Binding LossTimestamps}"
@@ -227,21 +232,12 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                 <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                     <StackPanel>
                         <TextBlock Text="DNS &amp; Path" Foreground="{StaticResource TextMuted}"/>
-                        <Grid Margin="0,6,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding DnsMedian}" Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold"/>
-                                <TextBlock Text="  (" Foreground="{StaticResource TextSubtle}"/>
-                                <TextBlock Text="{Binding DnsDetail}" Foreground="{StaticResource TextSubtle}"/>
-                                <TextBlock Text=")" Foreground="{StaticResource TextSubtle}"/>
-                            </StackPanel>
-                            <Border Grid.Column="1" Style="{StaticResource StatusPill}" Background="{Binding StatusBrush}" HorizontalAlignment="Right">
-                                <TextBlock Style="{StaticResource PillText}" Text="{Binding StatusText}"/>
-                            </Border>
-                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,6">
+                            <TextBlock Text="{Binding DnsMedian}" Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold"/>
+                            <TextBlock Text="  (" Foreground="{StaticResource TextSubtle}"/>
+                            <TextBlock Text="{Binding DnsDetail}" Foreground="{StaticResource TextSubtle}"/>
+                            <TextBlock Text=")" Foreground="{StaticResource TextSubtle}"/>
+                        </StackPanel>
                         <ItemsControl ItemsSource="{Binding TargetSummaries}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
