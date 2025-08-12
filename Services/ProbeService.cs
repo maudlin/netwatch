@@ -62,6 +62,8 @@ namespace Netwatch.Services
         public string BloatDetail { get; private set; } = "";
         public string LastBloatRunText { get; private set; } = "";
         public bool IsBloatTestRunning { get; private set; } = false;
+        public string BloatSeverityText { get; private set; } = "";
+        public System.Windows.Media.Brush BloatSeverityBrush { get; private set; } = new SolidColorBrush(System.Windows.Media.Color.FromRgb(107,114,128)); // gray default
         public string LinkBadge { get; private set; } = "Detecting link…";
         public string StatusText { get; private set; } = "UNKNOWN";
         public string StatusReason { get; private set; } = "";
@@ -71,11 +73,15 @@ namespace Netwatch.Services
         private static readonly SolidColorBrush GreenBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(43,182,115));
         private static readonly SolidColorBrush AmberBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255,176,32));
         private static readonly SolidColorBrush RedBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(229,72,77));
+        private static readonly SolidColorBrush BlueBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(37,99,235));
+        private static readonly SolidColorBrush GrayBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(107,114,128));
         static ProbeService()
         {
             GreenBrush.Freeze();
             AmberBrush.Freeze();
             RedBrush.Freeze();
+            BlueBrush.Freeze();
+            GrayBrush.Freeze();
         }
 
         public ProbeService()
@@ -386,6 +392,7 @@ namespace Netwatch.Services
             // Bufferbloat panel defaults
             if (string.IsNullOrEmpty(BloatDelta)) BloatDelta = "—";
             if (string.IsNullOrEmpty(BloatDetail)) BloatDetail = "Run the 10s upload test to estimate bufferbloat.";
+            if (string.IsNullOrEmpty(BloatSeverityText)) { BloatSeverityText = ""; BloatSeverityBrush = GrayBrush; }
 
             // Link badge (very rough)
             LinkBadge = GetActiveLinkBadge();
@@ -416,9 +423,9 @@ namespace Netwatch.Services
 
             (StatusText, StatusBrush) = score switch
             {
-                >=3 => ("RED", RedBrush),
-                1 or 2 => ("AMBER", AmberBrush),
-                _ => ("GREEN", GreenBrush),
+                >=3 => ("POOR", RedBrush),
+                1 or 2 => ("MODERATE", AmberBrush),
+                _ => ("GOOD", GreenBrush),
             };
             StatusReason = reason.Count == 0 ? "Video-ready." : string.Join("; ", reason);
             LastUpdatedText = $"↻ {DateTime.Now:HH:mm:ss}";
@@ -573,7 +580,11 @@ namespace Netwatch.Services
             try
             {
                 IsBloatTestRunning = true;
+                BloatSeverityText = "TESTING";
+                BloatSeverityBrush = BlueBrush;
                 Raise(nameof(IsBloatTestRunning));
+                Raise(nameof(BloatSeverityText));
+                Raise(nameof(BloatSeverityBrush));
 
                 // Baseline: p50 latency over the last 30 seconds (if available)
                 var now = NowMs();
@@ -603,25 +614,34 @@ namespace Netwatch.Services
                                               .Select(p => p.RttMs).ToArray();
                 if (baselineArr.Length < 5)
                 {
-                    BloatDelta = "Baseline warming up—try again in ~20s";
-                    BloatDetail = "Collecting idle samples for a stable baseline.";
+                    BloatDelta = "—";
+                    BloatDetail = "Baseline warming up… need ~5 idle samples.";
+                    BloatSeverityText = "WARMING UP";
+                    BloatSeverityBrush = GrayBrush;
                 }
                 else if (underLoadArr.Length == 0)
                 {
                     BloatDelta = "No data";
                     BloatDetail = "No under-load samples collected during the test.";
+                    BloatSeverityText = "";
+                    BloatSeverityBrush = GrayBrush;
                 }
                 else
                 {
                     var loadP50 = PercentileOfArray(underLoadArr, 50);
                     var delta = Math.Max(0, loadP50 - baselineP50);
-                    var sev = delta >= 100 ? "HIGH" : delta >= 40 ? "MED" : "LOW";
-                    BloatDelta = $"+{delta} ms ({sev})";
-                    BloatDetail = $"Idle p50 {baselineP50} ms → Load p50 {loadP50} ms (+{delta} ms {sev})";
+                    // Thresholds: GOOD <15, MODERATE 15–40, POOR >40
+                    if (delta < 15) { BloatSeverityText = "GOOD"; BloatSeverityBrush = GreenBrush; }
+                    else if (delta <= 40) { BloatSeverityText = "MODERATE"; BloatSeverityBrush = AmberBrush; }
+                    else { BloatSeverityText = "POOR"; BloatSeverityBrush = RedBrush; }
+                    BloatDelta = $"+{delta} ms ({BloatSeverityText})";
+                    BloatDetail = $"Idle p50 {baselineP50} ms → Load p50 {loadP50} ms (+{delta} ms)";
                 }
                 LastBloatRunText = $"Tested at {DateTime.Now:HH:mm:ss}";
                 Raise(nameof(BloatDelta));
                 Raise(nameof(BloatDetail));
+                Raise(nameof(BloatSeverityText));
+                Raise(nameof(BloatSeverityBrush));
                 Raise(nameof(LastBloatRunText));
             }
             catch

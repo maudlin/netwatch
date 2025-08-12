@@ -9,6 +9,8 @@
   <Color x:Key="GreenColor">#2BB673</Color>
   <Color x:Key="AmberColor">#FFB020</Color>
   <Color x:Key="RedColor">#E5484D</Color>
+  <Color x:Key="BlueColor">#2563EB</Color>
+  <Color x:Key="GrayColor">#6B7280</Color>
   <Color x:Key="DividerColor">#22000000</Color>
 
   <!-- Brushes -->
@@ -24,6 +26,8 @@
   <SolidColorBrush x:Key="GreenBrush" Color="{StaticResource GreenColor}"/>
   <SolidColorBrush x:Key="AmberBrush" Color="{StaticResource AmberColor}"/>
   <SolidColorBrush x:Key="RedBrush" Color="{StaticResource RedColor}"/>
+  <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource BlueColor}"/>
+  <SolidColorBrush x:Key="GrayBrush" Color="{StaticResource GrayColor}"/>
   <SolidColorBrush x:Key="Divider" Color="{StaticResource DividerColor}"/>
   <!-- Chart gridline brush (subtle light on dark) -->
   <SolidColorBrush x:Key="GridlineBrush" Color="#22FFFFFF"/>
