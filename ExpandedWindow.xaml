@@ -101,24 +101,28 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                                 Stroke="{StaticResource TextPrimary}"
                                                 Thickness="1.2"
                                                 FadeEnabled="True"
-                                                PlotTopPadding="14"
+                                                PlotTopPadding="19"
                                                 PlotBottomPadding="12"
                                                 ShowYAxis="True"
                                                 ShowGridlines="True"
                                                 YAxisWidth="36"
-                                                ForceZeroBaseline="True" />
+                                                ForceZeroBaseline="True"
+                                                YMinOverride="0"
+                                                YMaxOverride="{Binding LatencyAxisMax}" />
                         <local:SparklineControl Values="{Binding JitterSeries}"
                                                 Timestamps="{Binding JitterTimestamps}"
                                                 WindowSeconds="60"
                                                 Stroke="{StaticResource AmberBrush}"
                                                 Thickness="1"
                                                 FadeEnabled="True"
-                                                PlotTopPadding="14"
+                                                PlotTopPadding="19"
                                                 PlotBottomPadding="12"
                                                 ShowYAxis="False"
                                                 ShowGridlines="False"
                                                 YAxisWidth="36"
-                                                ForceZeroBaseline="True" />
+                                                ForceZeroBaseline="True"
+                                                YMinOverride="0"
+                                                YMaxOverride="{Binding JitterAxisMax}" />
                             <!-- Legend & axis -->
                             <DockPanel VerticalAlignment="Top" LastChildFill="False" Margin="0,0,0,0">
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
@@ -157,7 +161,9 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                                 ShowYAxis="True"
                                                 ShowGridlines="True"
                                                 YAxisWidth="36"
-                                                ForceZeroBaseline="True" />
+                                                ForceZeroBaseline="True"
+                                                YMinOverride="0"
+                                                YMaxOverride="{Binding LossAxisMax}" />
                             <TextBlock Text="%" Foreground="{StaticResource TextSubtle}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Top"/>
                         </Grid>
                     </StackPanel>

@@ -228,6 +228,27 @@ namespace Netwatch.Controls
 
         #endregion
 
+        // Optional Y-axis overrides
+        public static readonly DependencyProperty YMinOverrideProperty = DependencyProperty.Register(
+            nameof(YMinOverride), typeof(double?), typeof(SparklineControl),
+            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double? YMinOverride
+        {
+            get => (double?)GetValue(YMinOverrideProperty);
+            set => SetValue(YMinOverrideProperty, value);
+        }
+
+        public static readonly DependencyProperty YMaxOverrideProperty = DependencyProperty.Register(
+            nameof(YMaxOverride), typeof(double?), typeof(SparklineControl),
+            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double? YMaxOverride
+        {
+            get => (double?)GetValue(YMaxOverrideProperty);
+            set => SetValue(YMaxOverrideProperty, value);
+        }
+
         private void OnCompositionTargetRendering(object? sender, EventArgs e)
         {
             // Frequent invalidation helps smooth the perceived scrolling when timestamps advance.
@@ -317,6 +338,15 @@ namespace Netwatch.Controls
                     minY = mid - 0.5;
                     maxY = mid + 0.5;
                 }
+            }
+
+            // Apply optional overrides (ensure a valid span)
+            if (YMinOverride.HasValue) minY = YMinOverride.Value;
+            if (YMaxOverride.HasValue) maxY = Math.Max(maxY, YMaxOverride.Value);
+            if (YMaxOverride.HasValue && (!YMinOverride.HasValue || YMaxOverride.Value - minY > 1e-6))
+            {
+                maxY = YMaxOverride.Value;
+                if (ForceZeroBaseline && minY < 0 && maxY > 0 && minY > 0) minY = 0;
             }
 
             // Map Y from value space into plotRect (invert Y axis)
@@ -412,13 +442,17 @@ namespace Netwatch.Controls
             double axisX = Math.Round(plotRect.Left) + 0.5; // crisp 1px line
             dc.DrawLine(axisPen, new System.Windows.Point(axisX, plotRect.Top), new System.Windows.Point(axisX, plotRect.Bottom));
 
-            // Choose 5 ticks (0/25/50/75/100%) for consistency across charts
+            // Choose 5 ticks but label only 0/50/100 for clarity
             int tickCount = 5;
             var typeface = new Typeface("Segoe UI");
             for (int i = 0; i < tickCount; i++)
             {
                 double t = (double)i / (tickCount - 1);
                 double val = minY + t * (maxY - minY);
+                // Only label 0/50/100% positions (i==0, i==2, i==4)
+                bool label = (i == 0 || i == (tickCount - 1) / 2 || i == tickCount - 1);
+                if (!label) continue;
+
                 string text;
                 if (!string.IsNullOrEmpty(YUnit))
                 {
@@ -475,10 +509,9 @@ namespace Netwatch.Controls
         private static string FormatNumber(double v)
         {
             if (double.IsNaN(v) || double.IsInfinity(v)) return "";
-            // Prefer integer-like display when close to whole numbers
-            if (Math.Abs(v - Math.Round(v)) < 1e-6) return ((int)Math.Round(v)).ToString(CultureInfo.InvariantCulture);
-            // Otherwise short format
-            return v.ToString("0.##", CultureInfo.InvariantCulture);
+            // Clamp negatives to zero for display and round to non-negative integers
+            if (v < 0) v = 0;
+            return ((int)Math.Round(v)).ToString(CultureInfo.InvariantCulture);
         }
 
         private StreamGeometry BuildCatmullRomGeometry(IReadOnlyList<System.Windows.Point> source, Func<double, double> yMap)
