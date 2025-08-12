@@ -109,7 +109,7 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                                 ForceZeroBaseline="True"
                                                 YMinOverride="0"
                                                 YMaxOverride="{Binding LatencyAxisMax}" />
-                        local:SparklineControl Values="{Binding JitterSeries}"
+                        <local:SparklineControl Values="{Binding JitterSeries}"
                                                 Timestamps="{Binding JitterTimestamps}"
                                                 WindowSeconds="60"
                                                 Stroke="{StaticResource AmberBrush}"
@@ -249,7 +249,6 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                         </Border>
                         <TextBlock Text="{Binding StatusReason}" Foreground="{StaticResource TextMuted}"/>
                     </StackPanel>
-                    <CheckBox Grid.Column="1" Content="Call Guard" Foreground="{StaticResource TextMuted}"/>
                 </Grid>
             </StackPanel>
         </ScrollViewer>
