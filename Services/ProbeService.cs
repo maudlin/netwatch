@@ -679,7 +679,7 @@ namespace Netwatch.Services
         // NIC change handling (debounced)
         private volatile bool _nicChangePending = false;
         private DateTime _nicChangeLastSetUtc = DateTime.MinValue;
-        private static readonly TimeSpan _nicDebounce = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan _nicDebounce = TimeSpan.FromSeconds(3);
 
         private void OnNetworkAddressChanged(object? sender, EventArgs e)
         {
@@ -692,9 +692,15 @@ namespace Netwatch.Services
             if (_nicChangePending && (DateTime.UtcNow - _nicChangeLastSetUtc) >= _nicDebounce)
             {
                 _nicChangePending = false;
-                // Re-discover targets and clear buffers
+                // Re-discover targets; only clear buffers if targets actually changed
+                var beforeGw = _gatewayTarget;
+                var beforeDns = _dnsTarget;
                 DiscoverTargets();
-                ClearAllBuffersAndSeries();
+                bool changed = !Equals(beforeGw, _gatewayTarget) || !Equals(beforeDns, _dnsTarget);
+                if (changed)
+                {
+                    ClearAllBuffersAndSeries();
+                }
             }
         }
 

@@ -122,7 +122,8 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                                 YAxisWidth="36"
                                                 ForceZeroBaseline="True"
                                                 YMinOverride="0"
-                                                YMaxOverride="{Binding JitterAxisMax}" />
+                                                YMaxOverride="{Binding JitterAxisMax}"
+                                                Margin="36,0,0,0" />
                             <!-- Legend & axis -->
                             <DockPanel VerticalAlignment="Top" LastChildFill="False" Margin="0,0,0,0">
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
