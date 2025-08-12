@@ -93,43 +93,36 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                 <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                     <StackPanel>
                         <TextBlock Text="Latency &amp; Jitter" Foreground="{StaticResource TextMuted}"/>
-                        <Grid Height="130" ClipToBounds="True">
-                            <!-- Gridlines -->
-                            <Grid IsHitTestVisible="False">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
-                                <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
-                                <Rectangle Grid.Row="3" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
-                            </Grid>
-                            <!-- Series -->
+                            <Grid Height="130" ClipToBounds="True">
+                            <!-- Series (SparklineControl renders its own gridlines and axis) -->
                         <local:SparklineControl Values="{Binding LatencySeries}"
                                                 Timestamps="{Binding LatencyTimestamps}"
                                                 WindowSeconds="60"
                                                 Stroke="{StaticResource TextPrimary}"
                                                 Thickness="1.2"
                                                 FadeEnabled="True"
-                                                PlotTopPadding="14"
+                                                PlotTopPadding="19"
                                                 PlotBottomPadding="12"
                                                 ShowYAxis="True"
                                                 ShowGridlines="True"
                                                 YAxisWidth="36"
-                                                ForceZeroBaseline="True" />
+                                                ForceZeroBaseline="True"
+                                                YMinOverride="0"
+                                                YMaxOverride="{Binding LatencyAxisMax}" />
                         <local:SparklineControl Values="{Binding JitterSeries}"
                                                 Timestamps="{Binding JitterTimestamps}"
                                                 WindowSeconds="60"
                                                 Stroke="{StaticResource AmberBrush}"
                                                 Thickness="1"
                                                 FadeEnabled="True"
-                                                PlotTopPadding="14"
+                                                PlotTopPadding="19"
                                                 PlotBottomPadding="12"
-                                                ShowYAxis="True"
-                                                ShowGridlines="True"
+                                                ShowYAxis="False"
+                                                ShowGridlines="False"
                                                 YAxisWidth="36"
-                                                ForceZeroBaseline="True" />
+                                                ForceZeroBaseline="True"
+                                                YMinOverride="0"
+                                                YMaxOverride="{Binding JitterAxisMax}" />
                             <!-- Legend & axis -->
                             <DockPanel VerticalAlignment="Top" LastChildFill="False" Margin="0,0,0,0">
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
@@ -156,16 +149,7 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                             </Border>
                         </DockPanel>
                         <Grid Height="110" ClipToBounds="True">
-                            <Grid IsHitTestVisible="False">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
-                                <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
-                                <Rectangle Grid.Row="3" Height="1" Fill="{StaticResource GridlineBrush}" VerticalAlignment="Top"/>
-                            </Grid>
+                        <!-- Series (SparklineControl renders its own gridlines and axis) -->
                         <local:SparklineControl Values="{Binding LossSeries}"
                                                 Timestamps="{Binding LossTimestamps}"
                                                 WindowSeconds="60"
@@ -177,7 +161,9 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                                                 ShowYAxis="True"
                                                 ShowGridlines="True"
                                                 YAxisWidth="36"
-                                                ForceZeroBaseline="True" />
+                                                ForceZeroBaseline="True"
+                                                YMinOverride="0"
+                                                YMaxOverride="{Binding LossAxisMax}" />
                             <TextBlock Text="%" Foreground="{StaticResource TextSubtle}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Top"/>
                         </Grid>
                     </StackPanel>
