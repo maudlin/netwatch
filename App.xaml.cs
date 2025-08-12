@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using Netwatch.Services;
+using System.Drawing;
 
 namespace Netwatch
 {
@@ -40,6 +41,14 @@ namespace Netwatch
             };
 
             var menu = new ContextMenuStrip();
+            // Apply dark theme renderer to match WPF theme
+            menu.Renderer = new ToolStripProfessionalRenderer(new Services.DarkColorTable());
+            menu.ShowImageMargin = false;
+            // Font to match app typography
+            try { menu.Font = new Font("Segoe UI Variable", 9.0f, FontStyle.Regular, GraphicsUnit.Point); } catch { /* fallback to default */ }
+            menu.ForeColor = System.Drawing.ColorTranslator.FromHtml("#F7F7F8");
+            menu.BackColor = System.Drawing.ColorTranslator.FromHtml("#1E1E1F");
+
             var showMini = new ToolStripMenuItem("Show/Hide Mini HUD");
             showMini.Click += (s, ev) => ToggleMini();
             var showExpanded = new ToolStripMenuItem("Show Expanded Panel");
