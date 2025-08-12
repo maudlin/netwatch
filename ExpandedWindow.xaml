@@ -9,7 +9,7 @@ xmlns:local="clr-namespace:Netwatch.Controls"
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <Border Style="{StaticResource Card}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+        	<ScrollViewer VerticalScrollBarVisibility="Disabled" CanContentScroll="True">
             <StackPanel Margin="14">
                 <!-- Header bar with window controls -->
             <DockPanel MouseLeftButtonDown="OnHeaderDrag">
@@ -170,41 +170,33 @@ xmlns:local="clr-namespace:Netwatch.Controls"
                     </StackPanel>
                 </Border>
 
-                <!-- Bufferbloat card -->
-                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <StackPanel>
-                                <TextBlock Text="Idle vs Load" Foreground="{StaticResource TextMuted}"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center">
-                                    <Rectangle Width="40" Height="40" Fill="#222" RadiusX="6" RadiusY="6"/>
-                                    <Rectangle Width="40" Height="40" Fill="#333" RadiusX="6" RadiusY="6" Margin="8,0,0,0"/>
-                                </StackPanel>
-                            </StackPanel>
-                        <TextBlock Grid.Column="1" Text="{Binding BloatDelta}" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold" Margin="16,0,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding BloatDelta}" Value="—">
-                                            <Setter Property="FontSize" Value="12"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSubtle}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding BloatDelta}" Value="Not tested">
-                                            <Setter Property="FontSize" Value="12"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextSubtle}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        </StackPanel>
-                        <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Run 10s upload test" Margin="12,0,0,0" Padding="10,4" VerticalAlignment="Center" Click="RunUploadTest"/>
-                    </Grid>
-                </Border>
+                	<!-- Bufferbloat (Idle vs Load) card -->
+                	<Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    	<Grid>
+                        	<Grid.ColumnDefinitions>
+                            	<ColumnDefinition Width="*"/>
+                            	<ColumnDefinition Width="Auto"/>
+                        	</Grid.ColumnDefinitions>
+                        	<StackPanel VerticalAlignment="Center">
+                            	<TextBlock Text="Bufferbloat (Idle vs Load)" Foreground="{StaticResource TextMuted}"/>
+                            	<TextBlock Text="{Binding BloatDetail}" Foreground="{StaticResource TextPrimary}" FontSize="14" Margin="0,6,0,0"/>
+                            	<TextBlock Text="{Binding LastBloatRunText}" Foreground="{StaticResource TextSubtle}" FontSize="11" Margin="0,2,0,0"/>
+                        	</StackPanel>
+                        	<TextBlock Grid.Column="1" Text="{Binding BloatDelta}" Foreground="{StaticResource TextPrimary}" FontSize="20" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                        	<Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Run 10s upload test" Margin="12,0,0,0" Padding="10,4" VerticalAlignment="Center" Click="RunUploadTest">
+                            	<Button.Style>
+                                	<Style TargetType="Button">
+                                    	<Style.Triggers>
+                                        	<DataTrigger Binding="{Binding IsBloatTestRunning}" Value="True">
+                                            	<Setter Property="IsEnabled" Value="False"/>
+                                            	<Setter Property="Content" Value="Testing…"/>
+                                        	</DataTrigger>
+                                    	</Style.Triggers>
+                                	</Style>
+                            	</Button.Style>
+                        	</Button>
+                    	</Grid>
+                	</Border>
 
                 <!-- DNS & Targets card -->
                 <Border Style="{StaticResource Card}" Margin="0,0,0,10">

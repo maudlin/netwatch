@@ -59,6 +59,9 @@ namespace Netwatch.Services
         public string DnsMedian { get; private set; } = "—";
         public string DnsDetail { get; private set; } = "";
         public string BloatDelta { get; private set; } = "—";
+        public string BloatDetail { get; private set; } = "";
+        public string LastBloatRunText { get; private set; } = "";
+        public bool IsBloatTestRunning { get; private set; } = false;
         public string LinkBadge { get; private set; } = "Detecting link…";
         public string StatusText { get; private set; } = "UNKNOWN";
         public string StatusReason { get; private set; } = "";
@@ -380,9 +383,9 @@ namespace Netwatch.Services
                 DnsMedian = "—"; DnsDetail = "";
             }
 
-            // Placeholder for bufferbloat until upload test is implemented
-            // Keep last value
+            // Bufferbloat panel defaults
             if (string.IsNullOrEmpty(BloatDelta)) BloatDelta = "—";
+            if (string.IsNullOrEmpty(BloatDetail)) BloatDetail = "Run the 10s upload test to estimate bufferbloat.";
 
             // Link badge (very rough)
             LinkBadge = GetActiveLinkBadge();
@@ -455,6 +458,9 @@ namespace Netwatch.Services
                 Raise(nameof(DnsMedian));
                 Raise(nameof(DnsDetail));
                 Raise(nameof(BloatDelta));
+                Raise(nameof(BloatDetail));
+                Raise(nameof(LastBloatRunText));
+                Raise(nameof(IsBloatTestRunning));
                 Raise(nameof(LinkBadge));
                 Raise(nameof(StatusText));
                 Raise(nameof(StatusReason));
@@ -566,6 +572,9 @@ namespace Netwatch.Services
         {
             try
             {
+                IsBloatTestRunning = true;
+                Raise(nameof(IsBloatTestRunning));
+
                 // Baseline: p50 latency over the last 30 seconds (if available)
                 var now = NowMs();
                 var baselineWindowStart = now - 30_000;
@@ -592,9 +601,15 @@ namespace Netwatch.Services
                 var end = NowMs();
                 var underLoadArr = _pingPublic.Where(p => p.Success && p.TimestampMs >= start && p.TimestampMs <= end)
                                               .Select(p => p.RttMs).ToArray();
-                if (underLoadArr.Length == 0)
+                if (baselineArr.Length < 5)
+                {
+                    BloatDelta = "Baseline warming up—try again in ~20s";
+                    BloatDetail = "Collecting idle samples for a stable baseline.";
+                }
+                else if (underLoadArr.Length == 0)
                 {
                     BloatDelta = "No data";
+                    BloatDetail = "No under-load samples collected during the test.";
                 }
                 else
                 {
@@ -602,13 +617,24 @@ namespace Netwatch.Services
                     var delta = Math.Max(0, loadP50 - baselineP50);
                     var sev = delta >= 100 ? "HIGH" : delta >= 40 ? "MED" : "LOW";
                     BloatDelta = $"+{delta} ms ({sev})";
+                    BloatDetail = $"Idle p50 {baselineP50} ms → Load p50 {loadP50} ms (+{delta} ms {sev})";
                 }
+                LastBloatRunText = $"Tested at {DateTime.Now:HH:mm:ss}";
                 Raise(nameof(BloatDelta));
+                Raise(nameof(BloatDetail));
+                Raise(nameof(LastBloatRunText));
             }
             catch
             {
                 BloatDelta = "Test failed";
+                BloatDetail = "Upload test encountered an error.";
                 Raise(nameof(BloatDelta));
+                Raise(nameof(BloatDetail));
+            }
+            finally
+            {
+                IsBloatTestRunning = false;
+                Raise(nameof(IsBloatTestRunning));
             }
         }
 
