@@ -99,6 +99,11 @@ namespace Netwatch.Services
         public long[] JitterTimestamps { get; private set; } = Array.Empty<long>();
         public long[] LossTimestamps { get; private set; } = Array.Empty<long>();
         public long[] DnsTimestamps { get; private set; } = Array.Empty<long>();
+
+        // Axis overrides (sticky auto-range)
+        public double? LatencyAxisMax { get; private set; } = null;
+        public double? JitterAxisMax { get; private set; } = null;
+        public double? LossAxisMax { get; private set; } = null;
         private readonly List<double> _latencySeries = new();
         private readonly List<double> _jitterSeries = new();
         private readonly List<double> _lossSeries = new();
@@ -415,6 +420,9 @@ namespace Netwatch.Services
             StatusReason = reason.Count == 0 ? "Video-ready." : string.Join("; ", reason);
             LastUpdatedText = $"↻ {DateTime.Now:HH:mm:ss}";
 
+            // Update axis upper bounds (sticky auto-range)
+            UpdateAxisRanges(latP50, jitter, loss, dnsMed);
+
             // Update series from streaming stats
             // Use the same nowTs for timestamping series points
             if (!double.IsNaN(latP50))
@@ -464,6 +472,55 @@ namespace Netwatch.Services
                 Raise(nameof(LossTimestamps));
                 Raise(nameof(DnsTimestamps));
             }));
+        }
+
+        private void UpdateAxisRanges(double latP50, double jitter, double loss, double dnsMed)
+        {
+            try
+            {
+                // Helper to compute sticky upper given proposed and current
+                static double StickyUpper(double proposed, double? current, double minSpan, double cap)
+                {
+                    // snap to nice values
+                    double Snap(double v)
+                    {
+                        double[] nice = new double[] { 10, 20, 30, 40, 50, 75, 100, 120, 150, 200, 300, 400, 600 };
+                        foreach (var n in nice)
+                        {
+                            if (v <= n) return n;
+                        }
+                        return cap;
+                    }
+
+                    proposed = Math.Max(minSpan, Math.Min(cap, proposed));
+                    proposed = Snap(proposed);
+                    if (current is null) return proposed;
+                    double cur = current.Value;
+                    // hysteresis: only change if >15% difference
+                    if (Math.Abs(proposed - cur) / Math.Max(1.0, cur) > 0.15) return proposed;
+                    return cur;
+                }
+
+                // Latency axis from p95 approx (use p50 and add headroom if p95 unknown)
+                double latUpper = double.IsNaN(latP50) ? 100 : Math.Max(40, latP50 * 2.0);
+                LatencyAxisMax = StickyUpper(latUpper * 1.25, LatencyAxisMax, 40, 300);
+
+                // Jitter axis
+                double jitUpper = double.IsNaN(jitter) ? 30 : Math.Max(10, jitter * 3.0);
+                JitterAxisMax = StickyUpper(jitUpper * 1.25, JitterAxisMax, 10, 100);
+
+                // Loss axis (percent)
+                double lossUpper = double.IsNaN(loss) ? 5 : Math.Max(2, loss * 3.0);
+                LossAxisMax = StickyUpper(lossUpper * 1.25, LossAxisMax, 2, 30);
+
+                _ = System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    Raise(nameof(LatencyAxisMax));
+                    Raise(nameof(JitterAxisMax));
+                    Raise(nameof(LossAxisMax));
+                }));
+            }
+            catch { }
         }
 
         private string GetActiveLinkBadge()
